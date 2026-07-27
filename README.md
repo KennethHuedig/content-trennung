@@ -10,17 +10,19 @@ KI-Coding-Agenten arbeiten, indem sie Dateien lesen. In einem typischen Website-
 
 ## 2. Die Lösung
 
-Der Code kennt nur ein Schema und einen Platzhalter-Inhalt. Die echten Kundendaten liegen in einer Datei, die nicht im Repository ist und die kein Bauteil direkt importiert. Ein einziger Loader entscheidet über eine Umgebungsvariable, welche der beiden Quellen er nimmt, und validiert beide gegen dasselbe Schema.
+Der Code kennt nur ein Schema und einen Platzhalter-Inhalt. Die echten Kundendaten liegen in einer eigenen Datei, die kein Bauteil direkt importiert. Ein einziger Loader entscheidet über eine Umgebungsvariable, welche der beiden Quellen er nimmt, und validiert beide gegen dasselbe Schema.
+
+In diesem Repository ist `content/site.json` ausgeschlossen. In einem echten Kundenprojekt wird sie committet, weil die Deploy-Plattform sie beim Bauen braucht. Dann gilt der Hinweis zur Git-Historie aus Abschnitt 5 in vollem Umfang.
 
 ```mermaid
 flowchart LR
-    subgraph repo["Repository, hier lesen KI-Werkzeuge"]
+    subgraph repo["Code-Seite, hier lesen KI-Werkzeuge"]
         schema["content/schema.ts<br/>Vertrag"]
         mock["content/mock-content.ts<br/>Platzhalter, Default"]
     end
 
-    subgraph deploy["Nur in der Deploy-Umgebung"]
-        real["content/site.json<br/>Echtdaten, nicht eingecheckt"]
+    subgraph deploy["Inhalts-Seite, nur im Kundenprojekt"]
+        real["content/site.json<br/>Echtdaten"]
     end
 
     loader["lib/get-site-content.ts<br/>SITE_CONTENT-Schalter"]
@@ -70,6 +72,8 @@ Zwei Dinge sollte man wissen, bevor man dieses Muster als Schutzversprechen weit
 
 **Die Git-Historie vergisst nicht.** Wurden Echtdaten einmal committet, liegen sie in der Historie und sind über `git show` rekonstruierbar, auch wenn die Datei im aktuellen Stand gelöscht ist und der Pfad inzwischen in einer Deny-Regel steht. Eine Deny-Regel auf einen Dateipfad deckt das nicht ab. Wer nachträglich aufräumt, muss die Historie umschreiben, nicht die Datei löschen.
 
+Das ist kein Randfall, sondern der Normalfall im Kundenprojekt. Sobald die Deploy-Plattform aus dem Repository baut, muss `content/site.json` dort liegen, und ab dem ersten Commit steht sie in der Historie. Die Deny-Regel hält KI-Werkzeuge vom aktuellen Stand der Datei fern. Vom Rest der Historie hält sie niemanden fern.
+
 Daraus folgt die Formulierung, die trägt:
 
 > So konfiguriert, dass KI-Werkzeuge nur mit Platzhaltern arbeiten.
@@ -82,9 +86,11 @@ Der Unterschied klingt nach Wortklauberei. Er ist es nicht. Der erste Satz besch
 
 ## 6. Schutzniveau A und B
 
-**Niveau A, dieses Repository.** Die Echtdaten liegen als Datei im Projektordner, sind aber vom Repository ausgeschlossen und von den KI-Werkzeugen weggeregelt. Der Normalbetrieb sieht sie nie. Ein Prozess, der bewusst oder versehentlich am Werkzeug vorbei liest, kann sie erreichen. Für den Alltag reicht das, und es kostet nichts, weil der Platzhalterstand ohnehin der Auslieferungszustand ist.
+**Niveau A, dieses Repository.** Die Echtdaten liegen als eigene Datei im Projektordner, vom Code getrennt und von den KI-Werkzeugen weggeregelt. Der Normalbetrieb sieht sie nie. Ein Prozess, der bewusst oder versehentlich am Werkzeug vorbei liest, kann sie erreichen. Für den Alltag reicht das, und es kostet nichts, weil der Platzhalterstand ohnehin der Auslieferungszustand ist.
 
-**Niveau B, die harte Variante.** Die Echtdaten liegen gar nicht erst im Projekt. Sie werden beim Bauen über einen Zugang geladen, den es nur in der Deploy-Umgebung gibt, etwa aus einem Secret Store, einem Headless CMS oder einer API mit einem Token, das lokal nirgends existiert. Auf dem Entwicklungsrechner ist die Datei dann nicht abwesend, weil eine Regel sie verbirgt, sondern weil sie dort schlicht nicht existiert. Erst das trägt die Aussage, dass ein lokal laufendes Werkzeug die Daten nicht erreichen kann.
+In diesem Demo-Repository ist die Datei zusätzlich ganz aus dem Repository ausgeschlossen. Im Kundenprojekt ist sie es nicht, weil die Deploy-Plattform sie beim Bauen braucht. Niveau A schützt dort also den Arbeitsalltag, nicht die Historie.
+
+**Niveau B, die harte Variante.** Die Echtdaten liegen gar nicht erst im Projekt. Sie werden beim Bauen über einen Zugang geladen, den es nur in der Deploy-Umgebung gibt, etwa aus einem Secret Store, einem Headless CMS oder einer API mit einem Token, das lokal nirgends existiert. Auf dem Entwicklungsrechner ist die Datei dann nicht abwesend, weil eine Regel sie verbirgt, sondern weil sie dort schlicht nicht existiert. Und weil sie nie committet wird, landet sie auch nicht in der Historie. Erst das trägt die Aussage, dass ein lokal laufendes Werkzeug die Daten nicht erreichen kann.
 
 Der Weg von A nach B ist im Loader kurz: Statt `readFileSync` steht dort ein Abruf über den Zugang, den nur der Build hat. Der Rest des Musters, Schema, Platzhalter-Default, Validierung, bleibt unverändert. Genau dafür ist der Loader die einzige Stelle, die die Quelle kennt.
 
