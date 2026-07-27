@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./content/site.json)",
+      "Read(./public/kunde/**)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(type:*)",
+      "Bash(Get-Content:*)"
+    ]
+  }
+}
