@@ -1,0 +1,15 @@
+node_modules/
+
+# Echte Kundeninhalte, nie eingecheckt, pro Kundenrepo lokal
+content/site.json
+
+# Echte Kundenbilder, nie eingecheckt
+public/kunde/
+
+# Zugangsdaten liegen nur in der Deploy-Umgebung
+.env
+.env.*
+
+# Build- und Test-Artefakte
+coverage/
+tsconfig.tsbuildinfo

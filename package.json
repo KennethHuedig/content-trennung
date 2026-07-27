@@ -1,0 +1,23 @@
+{
+  "name": "content-trennung",
+  "version": "1.0.0",
+  "description": "Code und Kundeninhalte getrennt, damit KI-Werkzeuge nur mit Platzhaltern arbeiten",
+  "license": "MIT",
+  "author": "Kenneth Hüdig",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "validate:content": "tsx scripts/validate-content.ts"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
