@@ -50,7 +50,7 @@ Der Loader in diesem Repository ist bewusst framework-frei, damit das Muster ohn
 
 Das ist der eigentliche Trick, und es ist der Punkt, an dem solche Konzepte sonst sterben. Wenn die saubere Variante Mehrarbeit bedeutet, verliert sie gegen den Termindruck. Also darf sie keine Mehrarbeit bedeuten.
 
-Hier ist der Platzhalter kein Test-Fixture, das jemand zusätzlich pflegen müsste. Er ist der Default des Loaders: `SITE_CONTENT` ungesetzt bedeutet Platzhalter. Das Repository baut, testet und rendert vollständig in dem Zustand, in dem es ausgeliefert wird. Niemand muss vor einer KI-Session Daten wegräumen und niemand muss danach etwas zurückspielen. Der sichere Zustand ist der bequeme Zustand.
+Hier ist der Platzhalter kein Test-Fixture, das jemand zusätzlich pflegen müsste. Er ist der Default des Loaders: `SITE_CONTENT` ungesetzt bedeutet Platzhalter. Gemeint ist der Auslieferungszustand des Templates, nicht die fertige Kundenseite: Das Repository baut, testet und rendert vollständig in dem Zustand, in dem es ausgeliefert wird. Niemand muss vor einer KI-Session Daten wegräumen und niemand muss danach etwas zurückspielen. Der sichere Zustand ist der bequeme Zustand.
 
 Nebeneffekt: Weil das Schema beide Quellen validiert, ist der Platzhalter zugleich die lebende Feld-Referenz. Wer wissen will, welche Felder eine Kundendatei braucht, liest `content/mock-content.ts`, nicht die Datei eines Kunden.
 
@@ -112,7 +112,7 @@ rm content/site.json       # zurück in den Auslieferungszustand
 
 Die Testsuite läuft bewusst gegen ein Repository ohne `content/site.json`, weil genau das der Auslieferungszustand ist. Solange die Datei existiert, schlägt der Test für den Fehlerfall fehl. Den Schalter selbst setzt man in der Deploy-Umgebung, unter PowerShell lokal mit `$env:SITE_CONTENT = "real"`.
 
-`content/site.json` ist per `.gitignore` ausgeschlossen und steht in den Deny-Regeln. Sie taucht also weder im Repository noch in einer KI-Session auf.
+In diesem Repository ist `content/site.json` per `.gitignore` ausgeschlossen und steht zusätzlich in den Deny-Regeln. Sie taucht hier also weder im Repository noch in einer KI-Session auf. Im Kundenprojekt gilt nur der zweite Teil, siehe Abschnitt 5.
 
 ## Lizenz
 
