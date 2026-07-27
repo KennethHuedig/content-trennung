@@ -1,0 +1,66 @@
+{
+  "_hinweis": "Form der Echtdaten-Datei. Kopieren nach content/site.json, mit echten Inhalten fuellen, dann SITE_CONTENT=real setzen. content/site.json ist per .gitignore ausgeschlossen und per Deny-Regel fuer KI-Werkzeuge gesperrt. Diese Beispieldatei enthaelt ausschliesslich erfundene Werte.",
+  "company": {
+    "name": "Musterbetrieb GmbH",
+    "rechtsform": "GmbH",
+    "kurzbeschreibung": "Kurze Beschreibung des Unternehmens.",
+    "gruendungsjahr": 2010
+  },
+  "hero": {
+    "tagline": "Ihr verlässlicher Partner",
+    "ueberschrift": "Ihre Überschrift kommt hier hin",
+    "unterzeile": "Kurze, knackige Beschreibung was Sie tun und für wen.",
+    "ctaUeberschrift": "Bereit für den nächsten Schritt?",
+    "ctaUnterzeile": "Kontaktieren Sie uns, wir melden uns innerhalb eines Werktages.",
+    "bild": { "src": "/kunde/hero.webp", "alt": "Werkstatt der Musterbetrieb GmbH von innen" }
+  },
+  "leistungen": [
+    {
+      "titel": "Leistung 1",
+      "kurz": "Kurze Beschreibung dieser Leistung.",
+      "beschreibung": "Ausführlichere Beschreibung dieser Leistung."
+    }
+  ],
+  "ueberUns": {
+    "ueberschrift": "Wer wir sind",
+    "absaetze": ["Einleitungstext über das Unternehmen."]
+  },
+  "team": [
+    {
+      "name": "Max Mustermann",
+      "rolle": "Geschäftsführer",
+      "text": "Kurze Beschreibung der Person."
+    }
+  ],
+  "faq": [{ "frage": "Wie lange dauert ein Auftrag?", "antwort": "Antwort hier eintragen." }],
+  "galerie": [{ "src": "/kunde/galerie-1.webp", "alt": "Blick in die Werkstatt" }],
+  "kontakt": {
+    "email": "info@beispiel.de",
+    "telefon": "+49 0000 000000",
+    "strasse": "Straße Hausnummer",
+    "plz_ort": "PLZ Stadt",
+    "oeffnungszeiten": "Mo–Fr: 9:00–17:00 Uhr"
+  },
+  "legal": {
+    "betreiber": {
+      "name": "Max Mustermann",
+      "firma": "Musterbetrieb GmbH",
+      "strasse": "Straße Hausnummer",
+      "plz_ort": "PLZ Stadt"
+    },
+    "email": "info@beispiel.de",
+    "umsatzsteuerHinweis": "Umsatzsteuer-Identifikationsnummer gemäß §27a UStG: DE000000000",
+    "inhaltlichVerantwortlich": {
+      "name": "Max Mustermann",
+      "strasse": "Straße Hausnummer",
+      "plz_ort": "PLZ Stadt"
+    }
+  },
+  "seo": {
+    "titel": "Musterbetrieb GmbH",
+    "beschreibung": "Kurze Beschreibung des Unternehmens.",
+    "baseUrl": "https://example.com",
+    "locale": "de_DE",
+    "areaServed": "DE"
+  }
+}
