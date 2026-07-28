@@ -4,6 +4,8 @@ Code und Kundeninhalte technisch getrennt, damit KI-Werkzeuge nur mit Platzhalte
 
 Dieses Muster ist kein konstruiertes Beispiel. Es läuft produktiv in meinen Website-Templates, aus denen ich Kundenseiten baue. Dieses Repository ist der herausgelöste Kern davon, ohne Produkt-Logik, ohne Framework-Ballast.
 
+Warum ich das so gebaut habe, und was es im Alltag kostet, steht im Artikel [KI im Kundengeschäft, ohne dass Kundendaten hineingehen](https://www.linkedin.com/pulse/ki-im-kundengesch%C3%A4ft-ohne-dass-kundendaten-kenneth-h%C3%BCdig-3yytf/).
+
 ## 1. Das Problem
 
 KI-Coding-Agenten arbeiten, indem sie Dateien lesen. In einem typischen Website-Projekt liegen die Kundendaten mitten im Projekt: Firmenname, Anschrift, Telefonnummer, E-Mail-Adresse, Impressumsangaben, Porträtfotos. Damit landen personenbezogene Daten in Prompts, in Logs und in der Git-Historie, ohne dass das jemand bewusst entschieden hätte.
