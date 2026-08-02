@@ -2,9 +2,15 @@
   "permissions": {
     "deny": [
       "Read(./content/site.json)",
+      "Edit(./content/site.json)",
       "Read(./public/kunde/**)",
+      "Edit(./public/kunde/**)",
       "Read(./.env)",
       "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Read(./sandbox-canary.txt)",
+      "Edit(./sandbox-canary.txt)",
       "Bash(cat:*)",
       "Bash(head:*)",
       "Bash(tail:*)",

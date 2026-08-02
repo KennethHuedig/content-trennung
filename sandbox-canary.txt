@@ -1,0 +1,8 @@
+Kanarienvogel fuer `npm run verify:sandbox`.
+
+Diese Datei steht in `.claude/settings.json` unter `deny`. Sie enthaelt nichts
+Schuetzenswertes, ihr einziger Zweck ist, dass es etwas zu sperren gibt.
+
+Laeuft eine Sandbox auf Betriebssystemebene, liegt in ihrem Namensraum an dieser
+Stelle keine Datei mehr, und ein Leseversuch endet mit EACCES. Laeuft keine, ist
+diese Datei ganz normal lesbar. Genau diesen Unterschied misst das Skript.
