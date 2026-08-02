@@ -43,7 +43,7 @@ flowchart LR
 | `content/site.example.json` | Die Form der Echtdaten-Datei, mit erfundenen Werten gefüllt. |
 | `lib/get-site-content.ts` | Der einzige Zugang zu den Inhalten. Liest den Schalter, validiert, gibt zurück. |
 | `scripts/validate-content.ts` | Prüft eine vorhandene `content/site.json` gegen den Vertrag, ohne Feldwerte auszugeben. |
-| `scripts/verify-sandbox.ts` | Misst, ob eine Sandbox die Deny-Regeln wirklich durchsetzt. |
+| `scripts/verify-sandbox.mjs` | Misst, ob eine Sandbox die Deny-Regeln wirklich durchsetzt. Blankes Node ohne Abhängigkeiten, siehe Abschnitt 8. |
 | `sandbox-canary.txt` | Zieldatei dafür, ohne schützenswerten Inhalt. Steht in den Deny-Regeln, damit es etwas zu sperren gibt. |
 | `.claude/settings.json` | Deny-Regeln für die Pfade mit Echtdaten, lesend und schreibend. |
 | `CLAUDE.md` | Die geschriebene Regel für KI-Sessions. |
@@ -144,6 +144,8 @@ Das Skript liest `sandbox-canary.txt`, eine Datei ohne schützenswerten Inhalt, 
 Der dritte Fall ist kein Defekt dieses Repositorys, sondern eine Aussage über die Arbeitsumgebung, und er ist der Normalfall bei einer frischen Installation. Das Skript nennt dann die nötige Konfiguration.
 
 **Nicht in die CI einbauen.** Dort läuft keine Sandbox, das Skript meldet korrekt einen ungeschützten Zustand und färbt den Lauf rot. Es gehört auf den Rechner, auf dem die KI-Sitzungen stattfinden.
+
+Das Skript ist bewusst blankes Node, ohne `tsx` und ohne jede Abhängigkeit, obwohl der Rest des Repositorys TypeScript nutzt. Der Grund ist ein Fund aus genau diesem Test: `tsx` öffnet beim Start einen IPC-Socket unter `/tmp`, und eine aktive Sandbox verweigert das mit `EPERM`. Die erste Fassung scheiterte deshalb, bevor sie zur Messung kam. **Ein Werkzeug, das die Sandbox prüft, darf nicht an ihr scheitern.** Derselbe Fallstrick trifft jede Toolchain mit IPC oder Watch-Modus, und er ist beim Arbeiten in einer Sandbox das häufigste Ärgernis.
 
 ## Lizenz
 
