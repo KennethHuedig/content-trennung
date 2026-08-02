@@ -43,7 +43,9 @@ flowchart LR
 | `content/site.example.json` | Die Form der Echtdaten-Datei, mit erfundenen Werten gefüllt. |
 | `lib/get-site-content.ts` | Der einzige Zugang zu den Inhalten. Liest den Schalter, validiert, gibt zurück. |
 | `scripts/validate-content.ts` | Prüft eine vorhandene `content/site.json` gegen den Vertrag, ohne Feldwerte auszugeben. |
-| `.claude/settings.json` | Deny-Regeln für die Pfade mit Echtdaten. |
+| `scripts/verify-sandbox.mjs` | Misst, ob eine Sandbox die Deny-Regeln wirklich durchsetzt. Blankes Node ohne Abhängigkeiten, siehe Abschnitt 8. |
+| `sandbox-canary.txt` | Zieldatei dafür, ohne schützenswerten Inhalt. Steht in den Deny-Regeln, damit es etwas zu sperren gibt. |
+| `.claude/settings.json` | Deny-Regeln für die Pfade mit Echtdaten, lesend und schreibend. |
 | `CLAUDE.md` | Die geschriebene Regel für KI-Sessions. |
 
 Der Loader in diesem Repository ist bewusst framework-frei, damit das Muster ohne Next.js lesbar und testbar ist. Produktiv wird er in einer Next.js-App aus Server Components aufgerufen, dort zusätzlich mit `import 'server-only'` und in Reacts `cache()` gewickelt, damit pro Request nur einmal geparst wird.
@@ -58,19 +60,26 @@ Nebeneffekt: Weil das Schema beide Quellen validiert, ist der Platzhalter zuglei
 
 ## 4. Die Schichten, von stark nach schwach
 
-1. **Sandbox auf Betriebssystemebene.** Der Prozess kann auf bestimmte Pfade schlicht nicht zugreifen. Das ist die einzige Schicht, die auch dann hält, wenn das Werkzeug etwas tut, das niemand vorhergesehen hat. Sie liegt außerhalb dieses Repositorys, weil sie zur Arbeitsumgebung gehört, nicht zum Projekt.
-2. **Deny-Regeln im KI-Werkzeug.** `.claude/settings.json` sperrt `content/site.json`, `public/kunde/**` und die `.env`-Dateien. Wirkt bei den eingebauten Dateiwerkzeugen und bei Shell-Befehlen, die das Werkzeug als Lesezugriff erkennt.
+1. **Sandbox auf Betriebssystemebene.** Der Prozess kann auf bestimmte Pfade schlicht nicht zugreifen. Das ist die einzige Schicht, die auch dann hält, wenn das Werkzeug etwas tut, das niemand vorhergesehen hat. Sie liegt außerhalb dieses Repositorys, weil sie zur Arbeitsumgebung gehört, nicht zum Projekt. Bei Claude Code unter Linux und WSL wird sie mit `sandbox.enabled` eingeschaltet und speist sich aus denselben `Read(...)`-Regeln: Über jeden gesperrten Pfad bindet sie `/dev/null`, sodass im Namespace des Prozesses dort keine Datei mehr liegt. Ein Leseversuch endet mit `EACCES`, ganz gleich, ob er aus dem Werkzeug, einem Shell-Befehl oder einem Interpreter kommt. Zwei Schalter gehören dazu: `allowUnsandboxedCommands: false`, sonst bleibt der Ausbruch möglich, und `failIfUnavailable: true`, sonst läuft alles unsandboxed weiter, wenn die Sandbox nicht startet.
+2. **Deny-Regeln im KI-Werkzeug.** `.claude/settings.json` sperrt `content/site.json`, `public/kunde/**` und die `.env`-Dateien, jeweils fürs Lesen und fürs Ändern. Wirkt bei den eingebauten Dateiwerkzeugen und bei Shell-Befehlen, die das Werkzeug als Lesezugriff erkennt. Wo genau diese Erkennung endet, steht in Abschnitt 5.
 3. **Platzhalter als Standard.** Siehe oben. Diese Schicht schützt nicht gegen einen entschlossenen Zugriff, sie sorgt dafür, dass der Normalfall gar nicht erst in die Nähe der Echtdaten kommt.
 4. **Zugangsdaten nur in der Deploy-Umgebung.** `SITE_CONTENT=real` und alles, was sonst noch Zugriff eröffnet, ist in der Deploy-Umgebung gesetzt und nirgends im Repository.
-5. **Die geschriebene Regel.** `CLAUDE.md` sagt, was tabu ist und dass Reviews nur gegen den Mock laufen. Das ist die schwächste Schicht, weil sie nur wirkt, solange das Modell sie befolgt. Sie steht trotzdem da, weil sie den Menschen erklärt, warum die anderen Schichten existieren.
+5. **Die geschriebene Regel.** `CLAUDE.md` sagt, was tabu ist und dass Reviews nur gegen den Mock laufen. Das ist die schwächste Schicht, weil sie nur wirkt, solange das Modell sie befolgt. Sie steht trotzdem da, weil sie den Menschen erklärt, warum die anderen Schichten existieren. Bemerkenswert am Test aus Abschnitt 5: Genau diese Schicht hat zweimal gehalten, wo die Deny-Regeln nichts ausgerichtet hätten. Zwei Sessions haben den Leseversuch von sich aus verweigert, einmal unter Berufung auf die Tabu-Regel, einmal mit dem Hinweis, die Zieldatei sehe anders aus als beschrieben. Das ist kein Ersatz für die unteren Schichten, aber es ist mehr, als ich dieser Schicht zugetraut hätte.
 
-Die Deny-Regeln in diesem Repository gehen etwas über meinen produktiven Stand hinaus. Produktiv sind es die vier `Read`-Regeln. Hier sind zusätzlich die gängigen Shell-Lesebefehle gesperrt (`cat`, `head`, `tail`, `type`, `Get-Content`), weil ein öffentlich kopierbares Beispiel die bessere Variante zeigen sollte.
+Die Regelliste hier ist dieselbe, die in meinen produktiven Templates steht. Sie war es eine Weile nicht: Dieses Repository hatte zusätzlich die gängigen Shell-Lesebefehle gesperrt (`cat`, `head`, `tail`, `type`, `Get-Content`), weil ein öffentlich kopierbares Beispiel die bessere Variante zeigen sollte. Nach dem Gate-Test aus Abschnitt 5 sind die Templates nachgezogen, und die `Edit`-Regeln sind überall dazugekommen.
 
 ## 5. Wo die Absicherung endet
 
-Zwei Dinge sollte man wissen, bevor man dieses Muster als Schutzversprechen weitergibt.
+Drei Dinge sollte man wissen, bevor man dieses Muster als Schutzversprechen weitergibt. Sie stehen hier nicht als Vermutung: Ich habe die Regeln gegen dreizehn Zugriffswege getestet, mit einer Dummy-Datei aus `site.example.json`, und vier davon kamen durch.
 
-**Deny-Regeln greifen nicht überall.** Sie greifen bei den eingebauten Dateiwerkzeugen und bei Shell-Befehlen, die das Werkzeug als Lesezugriff erkennt. Sie greifen nicht zuverlässig bei beliebigen Unterprozessen. Ein Build-Schritt, ein Testlauf, ein kurzes Skript oder ein Werkzeug, das seinerseits Dateien einliest, läuft an der Regel vorbei. Die Regel filtert Absichten, die sie versteht, nicht alles, was technisch möglich ist.
+**Deny-Regeln greifen nicht überall, und man kann ziemlich genau sagen, wo sie aufhören.** Sie sind keine reine Liste von Kommandonamen. Das Werkzeug analysiert einen Shell-Befehl darauf, ob er eine Datei liest, und gleicht den Pfad gegen die `Read`-Regeln ab. Deshalb scheiterten im Test auch `sed`, `awk` und `jq`, die in keiner Regel stehen. Diese Analyse erkennt ein bekanntes Leseprogramm mit einem Dateiargument. Sie durchschaut zwei Dinge nicht:
+
+- **Einen Wrapper.** `Get-Content` ist gesperrt, `powershell.exe -Command "Get-Content …"` lief durch. Vorne steht `powershell.exe`, und darauf passt keine Regel.
+- **Einen Interpreter.** `node -e "require('fs').readFileSync(…)"` lief durch. Beliebiger Code hinter `-e` ist für eine Kommando-Denylist unsichtbar, dasselbe gilt für `python -c`, `perl -e` und `ruby -e`.
+
+Der zweite Punkt ist der wichtigere, und er ist nicht wegzukonfigurieren. Jeder neue Eintrag zieht den nächsten nach, und wer `node` und `python` sperrt, kann in dem Projekt nicht mehr arbeiten. Ein Build-Schritt, ein Testlauf oder ein Werkzeug, das seinerseits Dateien einliest, läuft aus demselben Grund an der Regel vorbei. Die Regel filtert Absichten, die sie versteht, nicht alles, was technisch möglich ist. Genau dafür steht Schicht 1 an erster Stelle: Gegen eine Sandbox auf Betriebssystemebene hilft dem Interpreter sein Interpretersein nicht. Auch das ist gemessen, im selben Aufbau mit eingeschalteter Sandbox: Derselbe Lesezugriff, der ohne sie 33 Bytes zurückgibt, endet mit ihr bei `EACCES`.
+
+**Eine Leseregel ist keine Schreibregel.** `Read(./public/kunde/**)` verhindert, dass die Kundenbilder gelesen werden, und sonst nichts. Im Test konnte ich in dasselbe Verzeichnis schreiben. Die Datei, die ich nicht ansehen darf, durfte ich ersetzen. Für Daten, die nur an dieser einen Stelle liegen, ist das der schlimmere Fall. Deshalb steht jeder geschützte Pfad hier zweimal, als `Read` und als `Edit`. Eine `Write(…)`-Regel wäre der naheliegende dritte Eintrag und ist der falsche: Claude Code wertet sie nicht aus und weist beim Start darauf hin, `Edit(…)` deckt alle dateischreibenden Werkzeuge mit ab.
 
 **Die Git-Historie vergisst nicht.** Wurden Echtdaten einmal committet, liegen sie in der Historie und sind über `git show` rekonstruierbar, auch wenn die Datei im aktuellen Stand gelöscht ist und der Pfad inzwischen in einer Deny-Regel steht. Eine Deny-Regel auf einen Dateipfad deckt das nicht ab. Wer nachträglich aufräumt, muss die Historie umschreiben, nicht die Datei löschen.
 
@@ -115,6 +124,28 @@ rm content/site.json       # zurück in den Auslieferungszustand
 Die Testsuite läuft bewusst gegen ein Repository ohne `content/site.json`, weil genau das der Auslieferungszustand ist. Solange die Datei existiert, schlägt der Test für den Fehlerfall fehl. Den Schalter selbst setzt man in der Deploy-Umgebung, unter PowerShell lokal mit `$env:SITE_CONTENT = "real"`.
 
 In diesem Repository ist `content/site.json` per `.gitignore` ausgeschlossen und steht zusätzlich in den Deny-Regeln. Sie taucht hier also weder im Repository noch in einer KI-Session auf. Im Kundenprojekt gilt nur der zweite Teil, siehe Abschnitt 5.
+
+## 8. Die eigene Absicherung nachmessen
+
+Abschnitt 4 stellt fünf Schichten auf, und Abschnitt 5 sagt, wo sie enden. Beides sind Behauptungen, solange man sie nicht prüft. Für die unterste und wichtigste Schicht geht das mit einem Befehl:
+
+```bash
+npm run verify:sandbox
+```
+
+Das Skript liest `sandbox-canary.txt`, eine Datei ohne schützenswerten Inhalt, die einzig deshalb existiert, weil sie in den Deny-Regeln steht. Echtdaten fasst es nie an.
+
+| Ausgabe | Bedeutung |
+|---|---|
+| `Sandbox aktiv: … scheitert mit EACCES` | Die Regeln greifen auf Dateisystemebene. Auch ein Unterprozess kommt nicht vorbei |
+| `Sandbox aktiv: … liest sich als leer` | Dasselbe, der Pfad ist im Namensraum überdeckt |
+| `Keine Sandbox aktiv: … normal lesbar` | Die Regeln wirken nur im KI-Werkzeug. Ein `node -e` liest an ihnen vorbei |
+
+Der dritte Fall ist kein Defekt dieses Repositorys, sondern eine Aussage über die Arbeitsumgebung, und er ist der Normalfall bei einer frischen Installation. Das Skript nennt dann die nötige Konfiguration.
+
+**Nicht in die CI einbauen.** Dort läuft keine Sandbox, das Skript meldet korrekt einen ungeschützten Zustand und färbt den Lauf rot. Es gehört auf den Rechner, auf dem die KI-Sitzungen stattfinden.
+
+Das Skript ist bewusst blankes Node, ohne `tsx` und ohne jede Abhängigkeit, obwohl der Rest des Repositorys TypeScript nutzt. Der Grund ist ein Fund aus genau diesem Test: `tsx` öffnet beim Start einen IPC-Socket unter `/tmp`, und eine aktive Sandbox verweigert das mit `EPERM`. Die erste Fassung scheiterte deshalb, bevor sie zur Messung kam. **Ein Werkzeug, das die Sandbox prüft, darf nicht an ihr scheitern.** Derselbe Fallstrick trifft jede Toolchain mit IPC oder Watch-Modus, und er ist beim Arbeiten in einer Sandbox das häufigste Ärgernis.
 
 ## Lizenz
 

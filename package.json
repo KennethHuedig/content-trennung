@@ -9,7 +9,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "validate:content": "tsx scripts/validate-content.ts"
+    "validate:content": "tsx scripts/validate-content.ts",
+    "verify:sandbox": "node scripts/verify-sandbox.mjs"
   },
   "dependencies": {
     "zod": "^4.4.3"
